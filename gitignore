@@ -1,24 +1,26 @@
-# Virtual environment
+# --- Python virtual environments ---
 .venv/
 venv/
 
-# Datasets — too large for GitHub
+# --- Datasets and large data artifacts ---
 data/
 
-# Trained model weights — too large
+# --- Trained models and weight files ---
 models/
+*.pt
+*.pth
 
-# Jupyter checkpoints
-.ipynb_checkpoints/
-
-# Python cache
+# --- Python cache / build artifacts ---
 __pycache__/
 *.pyc
 *.pyo
 
-# OS files
+# --- Jupyter notebook checkpoints ---
+.ipynb_checkpoints/
+
+# --- OS / file-system clutter ---
 .DS_Store
 Thumbs.db
 
-# Streamlit
+# --- Streamlit secrets ---
 .streamlit/secrets.toml
