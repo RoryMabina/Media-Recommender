@@ -1,67 +1,107 @@
-# 🎬 Media Recommendation System
+# Media Recommendation System
 **Movies · TV Shows · Anime**
 
-A content-based recommendation engine that suggests what to watch next based on your viewing history. Built with Python, scikit-learn, and Streamlit.
+A hybrid recommendation engine that combines content-based filtering and a trained Neural Collaborative Filtering (NCF) model to suggest what to watch next. Built with Python, PyTorch, scikit-learn, and Streamlit.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3+-orange)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.32+-red)
 
 ---
 
-## 🚀 Demo
+## Demo
 
-Open `demo.ipynb` to see the full walkthrough — no datasets required, runs on a built-in sample of 30 titles.
+Open `demo.ipynb` for a full walkthrough — no datasets required, runs on a built-in sample of 30 titles and synthetic rating data.
 
-## ⚙️ How It Works
+---
 
-1. Each title's **genres + overview** are combined into a text "soup"
-2. **TF-IDF** converts that text into a numeric vector
-3. **Cosine similarity** measures how close any two titles are
-4. Given your watched list (+ optional ratings), the engine scores every unseen title and returns the top matches
+## How It Works
 
-## 📁 Project Structure
+This project uses two recommendation approaches combined into a hybrid system:
+
+**Content-Based Filtering (`recommender.py`)**
+- Each title's genres and overview are combined into a weighted text representation
+- TF-IDF converts that text into a numeric vector (genres weighted 3x higher than overview)
+- Cosine similarity measures how close any two titles are
+- Works immediately with no training data — just your watched list
+
+**Neural Collaborative Filtering (`neural_recommender.py`)**
+- A PyTorch NCF model with two paths: GMF (linear interactions) and MLP (non-linear patterns)
+- Each user and item gets a learned 64-dimensional embedding vector
+- Trained on 10M+ ratings from MyAnimeList and MovieLens combined
+- For cold-start users, builds a pseudo-embedding by averaging rated item embeddings
+
+---
+
+## Project Structure
 
 ```
 media-recommender/
-├── recommender.py     # Core recommendation engine
-├── app.py             # Streamlit web app
-├── demo.ipynb         # Jupyter notebook walkthrough
+├── recommender.py          # Content-based engine (TF-IDF + cosine similarity)
+├── neural_recommender.py   # NCF model definition, training loop, inference
+├── app.py                  # Streamlit web app
+├── Media Recommendation System (Demo Notebook).ipynb              # Jupyter notebook walkthrough
 ├── requirements.txt
-├── data/              # Put your CSV datasets here
+├── data/                   # Datasets go here (excluded from git)
 │   ├── movies.csv
-│   ├── shows.csv
-│   └── anime.csv
+│   ├── anime.csv
+│   ├── anime_ratings.csv
+│   └── movie_ratings.csv
+├── models/                 # Saved model weights (excluded from git)
+│   └── ncf_model.pt
 └── README.md
 ```
 
-## 📥 Getting Started
+---
 
-### 1. Install dependencies
+## Getting Started
+
+### 1. Clone and install dependencies
+
 ```bash
+git clone https://github.com/YOUR_USERNAME/media-recommender.git
+cd media-recommender
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # Mac/Linux
 pip install -r requirements.txt
 ```
 
 ### 2. Download datasets
+
 Place these CSVs in the `data/` folder:
 
-| File | Source |
-|------|--------|
-| `data/movies.csv` | [TMDB Movies – Kaggle](https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata) |
-| `data/shows.csv` | [TMDB TV Shows – Kaggle](https://www.kaggle.com/datasets/asaniczka/full-tmdb-tv-shows-dataset-2023) |
-| `data/anime.csv` | [MyAnimeList – Kaggle](https://www.kaggle.com/datasets/CooperUnion/anime-recommendations-database) |
+| File | Source | Notes |
+|------|--------|-------|
+| `data/movies.csv` | [TMDB Movies – Kaggle](https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata) | Rename to `movies.csv` |
+| `data/anime.csv` | [MyAnimeList – Kaggle](https://www.kaggle.com/datasets/CooperUnion/anime-recommendations-database) | Keep as `anime.csv` |
+| `data/anime_ratings.csv` | Same Kaggle link above | Rename `rating.csv` to this |
+| `data/movie_ratings.csv` | [MovieLens – GroupLens](https://grouplens.org/datasets/movielens/) | Rename `ratings.csv` to this |
 
 ### 3. Run the notebook demo
+
 ```bash
 jupyter notebook demo.ipynb
 ```
 
-### 4. Run the Streamlit app
+### 4. Train the neural model (optional but recommended)
+
+```bash
+python neural_recommender.py
+```
+
+Trains for 20 epochs on up to 10M ratings. Takes around 60-90 minutes on CPU, 10-20 minutes with a CUDA GPU. The best checkpoint is saved automatically to `models/ncf_model.pt`.
+
+### 5. Run the Streamlit app
+
 ```bash
 streamlit run app.py
 ```
 
-## 🧪 Use the Recommender in Python
+---
+
+## Use the Recommender in Python
 
 ```python
 from recommender import load_data, MediaRecommender
@@ -78,13 +118,34 @@ recs = rec.recommend(
 print(recs)
 ```
 
-## 🔮 Possible Improvements
+---
 
-- **Collaborative filtering** with the `Surprise` library for user-based recommendations
-- **Sentence-BERT embeddings** for richer semantic similarity
-- **TMDB API** integration for live posters and metadata
-- **User feedback loop** — mark results as "not interested" to refine future recommendations
+## Model Architecture
 
-## 📄 License
+```
+User ID --> User Embedding (64d) --+
+                                    +--(GMF)--> element-wise product --+
+Item ID --> Item Embedding (64d) --+                                   +--> Linear --> Rating
+                                    +--(MLP)--> [128 -> 64 -> 32] ----+
+User ID --> User Embedding (64d) --+
+                                    |
+Item ID --> Item Embedding (64d) --+
+```
+
+Total parameters: ~40M. Trained with Adam optimiser, MSE loss, and learning rate scheduling on plateau.
+
+---
+
+## Ideas to Take It Further
+
+- TMDB API integration for live posters and metadata
+- Sentence-BERT embeddings to replace TF-IDF for richer semantic similarity
+- User accounts with a database to persist watch history between sessions
+- Feedback loop — mark results as "not interested" to refine future recommendations
+- Sequence-aware model using a Transformer to capture the order titles were watched
+
+---
+
+## License
 
 MIT

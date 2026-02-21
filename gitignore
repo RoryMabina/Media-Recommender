@@ -1,8 +1,24 @@
-data/*.csv
-data/*.parquet
+# Virtual environment
+.venv/
+venv/
+
+# Datasets — too large for GitHub
+data/
+
+# Trained model weights — too large
+models/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Python cache
 __pycache__/
 *.pyc
-.ipynb_checkpoints/
-.env
-venv/
+*.pyo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Streamlit
 .streamlit/secrets.toml
