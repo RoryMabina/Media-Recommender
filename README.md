@@ -12,7 +12,7 @@ A hybrid recommendation engine that combines content-based filtering and a train
 
 ## Demo
 
-Open `demo.ipynb` for a full walkthrough — no datasets required, runs on a built-in sample of 30 titles and synthetic rating data.
+Open `Media Recommendation System (Demo Notebook).ipynb` for a full walkthrough — no datasets required, runs on a built-in sample of 30 titles and synthetic rating data.
 
 ---
 
